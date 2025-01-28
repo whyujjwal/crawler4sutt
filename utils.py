@@ -16,6 +16,14 @@ def is_valid_url(base_domain, url, config):
     
     return True
 
-def clean_text(text):
-    text = re.sub(r'\n{3,}', '\n\n', text)
-    return re.sub(r'[^\x00-\x7F]+', ' ', text).strip()
+def clean_text(text: str) -> str:
+    """Clean text by removing extra whitespace and newlines"""
+    if not text:
+        return ""
+    
+    # Replace multiple spaces and newlines with a single space
+    text = re.sub(r'\s+', ' ', text)
+    # Remove spaces around punctuation
+    text = re.sub(r'\s+([,.!?;:])', r'\1', text)
+    # Remove leading/trailing whitespace
+    return text.strip()

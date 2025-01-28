@@ -79,17 +79,21 @@ async def scrape_site(url: str, config: dict) -> None:
                     html_content = await response.text()
                     soup = BeautifulSoup(html_content, 'html.parser')
                     
+                    # Remove excluded tags
                     for tag in config['excluded_tags']:
                         for element in soup.find_all(tag):
                             element.decompose()
                     
+                    # Remove elements by CSS selectors
                     if 'clean_selectors' in config:
                         for selector in config['clean_selectors']:
                             for element in soup.select(selector):
                                 element.decompose()
                     
+                    # Extract and clean main content
                     main_content = soup.find('main') or soup.find('article') or soup.find('div', {'id': 'mw-content-text'})
-                    content = main_content.get_text(separator='\n', strip=True) if main_content else soup.get_text(strip=True)
+                    raw_content = main_content.get_text(' ', strip=True) if main_content else soup.get_text(' ', strip=True)
+                    cleaned_content = clean_text(raw_content)
                     
                     data = {
                         "metadata": {
@@ -103,8 +107,8 @@ async def scrape_site(url: str, config: dict) -> None:
                         },
                         "data": [{
                             "url": url,
-                            "title": soup.title.string.strip() if soup.title else "",
-                            "content": content,
+                            "title": clean_text(soup.title.string) if soup.title else "",
+                            "content": cleaned_content,
                             "links": [
                                 a.get('href') for a in soup.find_all('a', href=True)
                                 if not a.get('href').startswith('#')
